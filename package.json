@@ -1,16 +1,22 @@
 {
   "name": "cinematica",
-  "version": "0.1.0",
-  "description": "Cinematica — movie review landing page (demo)",
+  "version": "1.0.0",
+  "description": "Cinematica — MERN stack movie review landing page",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
   "scripts": {
-    "dev": "npm run dev --workspace=frontend",
-    "start": "npm start --workspace=frontend",
-    "start:backend": "npm start --workspace=backend"
-  }
+    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "start": "concurrently \"npm start -w backend\" \"npm start -w frontend\"",
+    "build": "npm run build -w frontend",
+    "install-all": "npm install && npm install -w backend && npm install -w frontend"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": ["mern", "react", "express", "mongodb", "movies"],
+  "license": "MIT"
 }
 
