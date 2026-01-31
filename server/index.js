@@ -1,8 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { createUser, findUserByEmail, verifyPassword, findUserById } from './db.js';
+import { createUser, findUserByEmail, verifyPassword, findUserById, createReview, getMovieReviews, deleteReview } from './db.js';
 import { generateTokens, verifyRefreshToken, authMiddleware } from './auth.js';
+import { connectDB } from './mongodb.js';
 
 dotenv.config();
 
@@ -114,6 +115,51 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
   }
 });
 
+// Review Routes
+app.get('/api/reviews/:movieId', async (req, res) => {
+  try {
+    const { movieId } = req.params;
+    const reviews = await getMovieReviews(parseInt(movieId));
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch reviews' });
+  }
+});
+
+app.post('/api/reviews/:movieId', authMiddleware, async (req, res) => {
+  try {
+    const { movieId } = req.params;
+    const { rating, text } = req.body;
+    const user = await findUserById(req.userId);
+
+    if (!rating || !text) {
+      return res.status(400).json({ error: 'Rating and text required' });
+    }
+
+    const review = await createReview(
+      parseInt(movieId),
+      req.userId,
+      user.name,
+      rating,
+      text
+    );
+
+    res.status(201).json(review);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create review' });
+  }
+});
+
+app.delete('/api/reviews/:reviewId', authMiddleware, async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    await deleteReview(reviewId, req.userId);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(error.message === 'Unauthorized' ? 403 : 500).json({ error: error.message });
+  }
+});
+
 // Proxy TMDB API requests (keeps API key server-side)
 app.get(/^\/api\/tmdb\/(.+)/, async (req, res) => {
   try {
@@ -129,6 +175,12 @@ app.get(/^\/api\/tmdb\/(.+)/, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Cinematica server running at http://localhost:${PORT}`);
+// Start server with MongoDB connection
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Cinematica server running at http://localhost:${PORT}`);
+  });
+}).catch((error) => {
+  console.error('Failed to start server:', error);
+  process.exit(1);
 });

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getMovieDetails, getMovieCredits, getConfiguration } from '../api/tmdb';
+import { getMovieReviews, createReview, deleteReview } from '../api/reviews';
+import { useAuth } from '../hooks/useAuth';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
@@ -21,6 +23,7 @@ function getBackdropUrl(config, path) {
 export default function MovieDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, isAuthenticated, accessToken } = useAuth();
   const [movie, setMovie] = useState(null);
   const [credits, setCredits] = useState(null);
   const [config, setConfig] = useState(null);
@@ -28,23 +31,21 @@ export default function MovieDetailPage() {
   const [reviews, setReviews] = useState([]);
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
-  const [reviewerName, setReviewerName] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [configRes, movieRes, creditsRes] = await Promise.all([
+        const [configRes, movieRes, creditsRes, reviewsRes] = await Promise.all([
           getConfiguration(),
           getMovieDetails(id),
           getMovieCredits(id),
+          getMovieReviews(id, accessToken),
         ]);
         setConfig(configRes?.images || {});
         setMovie(movieRes);
         setCredits(creditsRes);
-        // Load reviews from localStorage
-        const savedReviews = JSON.parse(localStorage.getItem(`movie-${id}-reviews`) || '[]');
-        setReviews(savedReviews);
+        setReviews(reviewsRes || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -52,29 +53,37 @@ export default function MovieDetailPage() {
       }
     }
     loadData();
-  }, [id]);
+  }, [id, accessToken]);
 
-  const handleSubmitReview = (e) => {
+  const handleSubmitReview = async (e) => {
     e.preventDefault();
-    if (!reviewText.trim() || !reviewerName.trim()) return;
+    if (!reviewText.trim()) return;
+
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
 
     setSubmitting(true);
-    const newReview = {
-      id: Date.now(),
-      name: reviewerName,
-      rating: reviewRating,
-      text: reviewText,
-      date: new Date().toLocaleDateString(),
-    };
+    try {
+      const newReview = await createReview(id, reviewRating, reviewText, accessToken);
+      setReviews([newReview, ...reviews]);
+      setReviewText('');
+      setReviewRating(5);
+    } catch (err) {
+      console.error('Failed to submit review:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-    const updatedReviews = [newReview, ...reviews];
-    setReviews(updatedReviews);
-    localStorage.setItem(`movie-${id}-reviews`, JSON.stringify(updatedReviews));
-    
-    setReviewText('');
-    setReviewerName('');
-    setReviewRating(5);
-    setSubmitting(false);
+  const handleDeleteReview = async (reviewId) => {
+    try {
+      await deleteReview(reviewId, accessToken);
+      setReviews(reviews.filter((r) => r._id !== reviewId));
+    } catch (err) {
+      console.error('Failed to delete review:', err);
+    }
   };
 
   if (loading) {
@@ -239,25 +248,30 @@ export default function MovieDetailPage() {
             Community Reviews
           </h2>
 
-          {/* Review Form */}
-          <form
-            onSubmit={handleSubmitReview}
-            className="bg-ink-50 rounded-xl p-6 mb-8 border border-ink-200"
-          >
-            <h3 className="font-serif text-xl font-semibold text-ink-900 mb-4">
-              Share Your Review
-            </h3>
+          {!isAuthenticated ? (
+            <div className="bg-gold-50 border border-gold-200 rounded-xl p-6 mb-8 text-center">
+              <p className="font-sans text-ink-600 mb-4">Sign in to share your review</p>
+              <button
+                onClick={() => navigate('/login')}
+                className="font-sans font-semibold px-6 py-2 bg-gold-600 text-white rounded-lg hover:bg-gold-700 transition-colors"
+              >
+                Sign In
+              </button>
+            </div>
+          ) : (
+            /* Review Form */
+            <form
+              onSubmit={handleSubmitReview}
+              className="bg-ink-50 rounded-xl p-6 mb-8 border border-ink-200"
+            >
+              <h3 className="font-serif text-xl font-semibold text-ink-900 mb-4">
+                Share Your Review
+              </h3>
 
-            <div className="grid sm:grid-cols-2 gap-4 mb-4">
-              <input
-                type="text"
-                placeholder="Your name"
-                value={reviewerName}
-                onChange={(e) => setReviewerName(e.target.value)}
-                className="font-sans px-4 py-2 rounded-lg border border-ink-300 focus:outline-none focus:border-gold-500"
-                required
-              />
-              <div>
+              <div className="mb-4">
+                <p className="font-sans text-sm text-ink-600 mb-4">
+                  Posting as: <span className="font-semibold">{user?.name}</span>
+                </p>
                 <label className="font-sans text-sm font-medium text-ink-700 block mb-2">
                   Rating: {reviewRating}/10
                 </label>
@@ -270,40 +284,52 @@ export default function MovieDetailPage() {
                   className="w-full"
                 />
               </div>
-            </div>
 
-            <textarea
-              placeholder="Write your review here..."
-              value={reviewText}
-              onChange={(e) => setReviewText(e.target.value)}
-              rows="4"
-              className="w-full font-sans px-4 py-2 rounded-lg border border-ink-300 focus:outline-none focus:border-gold-500 mb-4"
-              required
-            />
+              <textarea
+                placeholder="Write your review here..."
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                rows="4"
+                className="w-full font-sans px-4 py-2 rounded-lg border border-ink-300 focus:outline-none focus:border-gold-500 mb-4"
+                required
+              />
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-gold-600 hover:bg-gold-700 disabled:bg-ink-300 text-white font-sans font-semibold py-2 rounded-lg transition-colors"
-            >
-              {submitting ? 'Submitting...' : 'Submit Review'}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-gold-600 hover:bg-gold-700 disabled:bg-ink-300 text-white font-sans font-semibold py-2 rounded-lg transition-colors"
+              >
+                {submitting ? 'Submitting...' : 'Submit Review'}
+              </button>
+            </form>
+          )}
 
           {/* Reviews List */}
           {reviews.length > 0 ? (
             <div className="space-y-4">
               {reviews.map((review) => (
-                <div key={review.id} className="bg-white rounded-lg p-6 border border-ink-200">
+                <div key={review._id} className="bg-white rounded-lg p-6 border border-ink-200">
                   <div className="flex justify-between items-start mb-2">
-                    <p className="font-sans font-semibold text-ink-900">{review.name}</p>
-                    <span className="text-sm font-sans text-ink-500">{review.date}</span>
-                  </div>
-                  <div className="mb-3">
-                    <span className="font-sans font-medium text-gold-600">
-                      {'★'.repeat(review.rating)}
+                    <p className="font-sans font-semibold text-ink-900">{review.userName}</p>
+                    <span className="text-sm font-sans text-ink-500">
+                      {new Date(review.createdAt).toLocaleDateString()}
                     </span>
-                    <span className="font-sans text-ink-400 ml-2">{review.rating}/10</span>
+                  </div>
+                  <div className="mb-3 flex justify-between items-center">
+                    <div>
+                      <span className="font-sans font-medium text-gold-600">
+                        {'★'.repeat(review.rating)}
+                      </span>
+                      <span className="font-sans text-ink-400 ml-2">{review.rating}/10</span>
+                    </div>
+                    {user?._id === review.userId?._id && (
+                      <button
+                        onClick={() => handleDeleteReview(review._id)}
+                        className="text-sm font-sans text-red-600 hover:text-red-700 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    )}
                   </div>
                   <p className="font-sans text-ink-700 leading-relaxed">{review.text}</p>
                 </div>

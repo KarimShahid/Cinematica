@@ -1,65 +1,34 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { User, Review } from './models.js';
 import bcrypt from 'bcryptjs';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DB_FILE = path.join(__dirname, 'users.json');
-
-// Initialize users database if it doesn't exist
-function initDB() {
-  if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify([]), 'utf-8');
-  }
-}
-
-function getUsers() {
-  initDB();
-  try {
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
-  } catch {
-    return [];
-  }
-}
-
-function saveUsers(users) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(users, null, 2), 'utf-8');
-}
-
 export async function findUserByEmail(email) {
-  const users = getUsers();
-  return users.find((u) => u.email === email.toLowerCase());
+  return User.findOne({ email: email.toLowerCase() });
 }
 
 export async function findUserById(id) {
-  const users = getUsers();
-  return users.find((u) => u.id === id);
+  return User.findById(id);
 }
 
 export async function createUser(email, password, name) {
-  const users = getUsers();
-
   // Check if user already exists
-  if (users.find((u) => u.email === email.toLowerCase())) {
+  const existingUser = await findUserByEmail(email);
+  if (existingUser) {
     throw new Error('User already exists');
   }
 
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const newUser = {
-    id: Date.now().toString(),
+  const newUser = new User({
     email: email.toLowerCase(),
     password: hashedPassword,
     name: name.trim(),
-    createdAt: new Date().toISOString(),
-  };
+  });
 
-  users.push(newUser);
-  saveUsers(users);
+  await newUser.save();
 
   return {
-    id: newUser.id,
+    id: newUser._id,
     email: newUser.email,
     name: newUser.name,
   };
@@ -67,4 +36,38 @@ export async function createUser(email, password, name) {
 
 export async function verifyPassword(password, hashedPassword) {
   return bcrypt.compare(password, hashedPassword);
+}
+
+// Reviews
+export async function createReview(movieId, userId, userName, rating, text) {
+  const review = new Review({
+    movieId,
+    userId,
+    userName,
+    rating,
+    text,
+  });
+
+  await review.save();
+  return review;
+}
+
+export async function getMovieReviews(movieId) {
+  return Review.find({ movieId })
+    .sort({ createdAt: -1 })
+    .populate('userId', 'name email');
+}
+
+export async function deleteReview(reviewId, userId) {
+  const review = await Review.findById(reviewId);
+  if (!review) {
+    throw new Error('Review not found');
+  }
+
+  if (review.userId.toString() !== userId) {
+    throw new Error('Unauthorized');
+  }
+
+  await Review.findByIdAndDelete(reviewId);
+  return review;
 }
