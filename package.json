@@ -1,0 +1,13 @@
+{
+  "name": "cinematica",
+  "version": "0.1.0",
+  "description": "Cinematica — movie review landing page (demo)",
+  "private": true,
+  "scripts": {
+    "start": "lite-server --port 5173"
+  },
+  "devDependencies": {
+    "lite-server": "^2.6.1"
+  }
+}
+
