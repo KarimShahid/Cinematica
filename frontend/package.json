@@ -1,0 +1,13 @@
+{
+  "name": "cinematica-frontend",
+  "version": "0.1.0",
+  "description": "Cinematica frontend — movie review landing page",
+  "private": true,
+  "scripts": {
+    "start": "lite-server --port 5173",
+    "dev": "lite-server --port 5173"
+  },
+  "devDependencies": {
+    "lite-server": "^2.6.1"
+  }
+}
