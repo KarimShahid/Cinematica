@@ -28,7 +28,7 @@ export async function createUser(email, password, name) {
   await newUser.save();
 
   return {
-    id: newUser._id,
+    _id: newUser._id,
     email: newUser.email,
     name: newUser.name,
   };
@@ -55,7 +55,7 @@ export async function createReview(movieId, userId, userName, rating, text) {
 export async function getMovieReviews(movieId) {
   return Review.find({ movieId })
     .sort({ createdAt: -1 })
-    .populate('userId', 'name email');
+    .populate('userId', '_id name email');
 }
 
 export async function deleteReview(reviewId, userId) {
@@ -70,4 +70,9 @@ export async function deleteReview(reviewId, userId) {
 
   await Review.findByIdAndDelete(reviewId);
   return review;
+}
+
+export async function getUserReviews(userId) {
+  return Review.find({ userId })
+    .sort({ createdAt: -1 });
 }

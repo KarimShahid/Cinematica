@@ -4,6 +4,8 @@ import LandingPage from './pages/LandingPage';
 import MovieDetailPage from './pages/MovieDetailPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import SearchResultsPage from './pages/SearchResultsPage';
+import UserReviewsPage from './pages/UserReviewsPage';
 
 function App() {
   return (
@@ -12,6 +14,8 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/movie/:id" element={<MovieDetailPage />} />
+          <Route path="/search" element={<SearchResultsPage />} />
+          <Route path="/my-reviews" element={<UserReviewsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
         </Routes>

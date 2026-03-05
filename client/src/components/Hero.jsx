@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+
 function getImageUrl(config, path, type = 'poster') {
   if (!path || !config?.secure_base_url) return null;
   const sizes = type === 'backdrop' ? (config.backdrop_sizes || config.poster_sizes || []) : (config.poster_sizes || []);
@@ -6,9 +8,16 @@ function getImageUrl(config, path, type = 'poster') {
 }
 
 export default function Hero({ config, featured }) {
+  const navigate = useNavigate();
   const backdropUrl = featured
     ? getImageUrl(config, featured.backdrop_path || featured.poster_path, 'backdrop')
     : null;
+
+  const handleWriteReview = () => {
+    if (featured?.id) {
+      navigate(`/movie/${featured.id}`);
+    }
+  };
 
   return (
     <section className="relative min-h-[70vh] sm:min-h-[75vh] flex items-end overflow-hidden">
@@ -41,10 +50,10 @@ export default function Hero({ config, featured }) {
             {featured?.overview || 'Find your next favorite film. Share your thoughts with the community.'}
           </p>
           <div className="flex items-center gap-6 mt-8">
-            <button className="font-sans font-semibold px-6 py-3 bg-gold-500 text-ink-950 rounded-lg hover:bg-gold-400 transition-colors">
-              Read Reviews
-            </button>
-            <button className="font-sans font-medium px-6 py-3 border border-ink-300 text-white rounded-lg hover:border-white hover:bg-white/10 transition-colors">
+            <button
+              onClick={handleWriteReview}
+              className="font-sans font-semibold px-6 py-3 bg-gold-500 text-ink-950 rounded-lg hover:bg-gold-400 transition-colors"
+            >
               Write a Review
             </button>
           </div>

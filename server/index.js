@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { createUser, findUserByEmail, verifyPassword, findUserById, createReview, getMovieReviews, deleteReview } from './db.js';
+import { createUser, findUserByEmail, verifyPassword, findUserById, createReview, getMovieReviews, deleteReview, getUserReviews } from './db.js';
 import { generateTokens, verifyRefreshToken, authMiddleware } from './auth.js';
 import { connectDB } from './mongodb.js';
 
@@ -28,7 +28,7 @@ app.post('/api/auth/signup', async (req, res) => {
     }
 
     const user = await createUser(email, password, name);
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    const { accessToken, refreshToken } = generateTokens(user._id);
 
     res.status(201).json({
       user,
@@ -58,11 +58,11 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const { accessToken, refreshToken } = generateTokens(user.id);
+    const { accessToken, refreshToken } = generateTokens(user._id);
 
     res.json({
       user: {
-        id: user.id,
+        _id: user._id,
         email: user.email,
         name: user.name,
       },
@@ -106,7 +106,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
     }
 
     res.json({
-      id: user.id,
+      _id: user._id,
       email: user.email,
       name: user.name,
     });
@@ -157,6 +157,15 @@ app.delete('/api/reviews/:reviewId', authMiddleware, async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(error.message === 'Unauthorized' ? 403 : 500).json({ error: error.message });
+  }
+});
+
+app.get('/api/my-reviews', authMiddleware, async (req, res) => {
+  try {
+    const reviews = await getUserReviews(req.userId);
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch your reviews' });
   }
 });
 

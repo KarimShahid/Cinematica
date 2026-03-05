@@ -8,7 +8,6 @@ import {
 import Header from '../components/Header';
 import Hero from '../components/Hero';
 import StatsBar from '../components/StatsBar';
-import SearchBar from '../components/SearchBar';
 import MovieGrid from '../components/MovieGrid';
 import Footer from '../components/Footer';
 
@@ -61,7 +60,6 @@ export default function LandingPage() {
       <main>
         <Hero config={config} featured={trending[0]} />
         <StatsBar />
-        <SearchBar />
         <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
           <h2 className="font-serif text-3xl sm:text-4xl font-semibold text-ink-900 mb-2">
             Popular Now
