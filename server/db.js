@@ -1,26 +1,26 @@
 import { User, Review } from './models.js';
 import bcrypt from 'bcryptjs';
 
-export async function findUserByEmail(email) {
-  return User.findOne({ email: email.toLowerCase() });
+export async function findUserByUsername(username) {
+  return User.findOne({ username: username.toLowerCase() });
 }
 
 export async function findUserById(id) {
   return User.findById(id);
 }
 
-export async function createUser(email, password, name) {
+export async function createUser(username, password, name) {
   // Check if user already exists
-  const existingUser = await findUserByEmail(email);
+  const existingUser = await findUserByUsername(username);
   if (existingUser) {
-    throw new Error('User already exists');
+    throw new Error('Username already exists');
   }
 
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const newUser = new User({
-    email: email.toLowerCase(),
+    username: username.toLowerCase(),
     password: hashedPassword,
     name: name.trim(),
   });
@@ -29,7 +29,7 @@ export async function createUser(email, password, name) {
 
   return {
     _id: newUser._id,
-    email: newUser.email,
+    username: newUser.username,
     name: newUser.name,
   };
 }

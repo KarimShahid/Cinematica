@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { createUser, findUserByEmail, verifyPassword, findUserById, createReview, getMovieReviews, deleteReview, getUserReviews } from './db.js';
+import { createUser, findUserByUsername, verifyPassword, findUserById, createReview, getMovieReviews, deleteReview, getUserReviews } from './db.js';
 import { generateTokens, verifyRefreshToken, authMiddleware } from './auth.js';
 import { connectDB } from './mongodb.js';
 
@@ -17,9 +17,9 @@ app.use(express.json());
 // Auth Routes
 app.post('/api/auth/signup', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { username, password, name } = req.body;
 
-    if (!email || !password || !name) {
+    if (!username || !password || !name) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -27,7 +27,7 @@ app.post('/api/auth/signup', async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    const user = await createUser(email, password, name);
+    const user = await createUser(username, password, name);
     const { accessToken, refreshToken } = generateTokens(user._id);
 
     res.status(201).json({
@@ -42,13 +42,13 @@ app.post('/api/auth/signup', async (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password required' });
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password required' });
     }
 
-    const user = await findUserByEmail(email);
+    const user = await findUserByUsername(username);
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -63,7 +63,7 @@ app.post('/api/auth/login', async (req, res) => {
     res.json({
       user: {
         _id: user._id,
-        email: user.email,
+        username: user.username,
         name: user.name,
       },
       accessToken,
@@ -107,7 +107,7 @@ app.get('/api/auth/me', authMiddleware, async (req, res) => {
 
     res.json({
       _id: user._id,
-      email: user.email,
+      username: user.username,
       name: user.name,
     });
   } catch (error) {
