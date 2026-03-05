@@ -73,7 +73,7 @@ export default function Header() {
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-ink-200 py-2 z-10">
                   <div className="px-4 py-2 border-b border-ink-200">
                     <p className="font-sans text-sm font-medium text-ink-900">{user?.name}</p>
-                    <p className="font-sans text-xs text-ink-500">{user?.email}</p>
+                    <p className="font-sans text-xs text-ink-500">@{user?.username}</p>
                   </div>
                   <button
                     onClick={() => {

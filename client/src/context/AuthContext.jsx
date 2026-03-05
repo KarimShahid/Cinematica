@@ -24,12 +24,12 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  const signup = useCallback(async (email, password, name) => {
+  const signup = useCallback(async (username, password, name) => {
     try {
       const res = await fetch(`${API_BASE}/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ username, password, name }),
       });
 
       if (!res.ok) {
@@ -51,12 +51,12 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (username, password) => {
     try {
       const res = await fetch(`${API_BASE}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       if (!res.ok) {

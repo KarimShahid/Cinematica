@@ -8,7 +8,7 @@ export default function SignupPage() {
   const navigate = useNavigate();
   const { signup } = useAuth();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -31,7 +31,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      await signup(email, password, name);
+      await signup(username, password, name);
       navigate('/');
     } catch (err) {
       setError(err.message);
@@ -76,14 +76,14 @@ export default function SignupPage() {
 
               <div>
                 <label className="block font-sans text-sm font-medium text-ink-700 mb-2">
-                  Email
+                  Username
                 </label>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="w-full font-sans px-4 py-2 rounded-lg border border-ink-300 focus:outline-none focus:border-gold-500 focus:ring-2 focus:ring-gold-200"
-                  placeholder="you@example.com"
+                  placeholder="johndoe"
                   required
                 />
               </div>
