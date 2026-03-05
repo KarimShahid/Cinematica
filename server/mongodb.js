@@ -1,7 +1,10 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+dotenv.config(); // Load .env variables
 
 export async function connectDB() {
-  const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/cinematica';
+  const mongoUri = process.env.MONGODB_URI;
 
   try {
     await mongoose.connect(mongoUri);

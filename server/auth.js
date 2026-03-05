@@ -1,7 +1,10 @@
+import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'cinematica-secret-key-change-in-production';
-const REFRESH_SECRET = process.env.REFRESH_SECRET || 'cinematica-refresh-key-change-in-production';
+dotenv.config(); // Load .env variables
+
+const JWT_SECRET = process.env.JWT_SECRET;
+const REFRESH_SECRET = process.env.REFRESH_SECRET;
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY = '7d';
 

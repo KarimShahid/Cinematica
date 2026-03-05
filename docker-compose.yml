@@ -1,0 +1,54 @@
+services:
+  db:
+    image: mongo:latest
+    container_name: cinematica-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: cinematica
+    networks:
+      - cinematica-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build: ./server
+    image: karimshahid/cinematica-server:latest
+    platform: linux/amd64
+    container_name: cinematica-server
+    env_file:
+    - ./server/.env
+    ports:
+      - 5001:5001
+    restart: unless-stopped
+    depends_on: 
+      db:
+        condition: service_healthy
+    networks:
+      - cinematica-network
+
+  client:
+    build: 
+      context: ./client
+    image: karimshahid/cinematica-client:latest
+    platform: linux/amd64
+    container_name: cinematica-client
+    ports:
+      - 80:80
+    restart: unless-stopped 
+    depends_on:
+      - server
+    networks:
+      - cinematica-network
+
+networks:
+  cinematica-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
