@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cinematica-frontend-deployment
+  labels:
+    app: cinematica-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cinematica-frontend
+  template:
+    metadata:
+      labels:
+        app: cinematica-frontend
+    spec:
+      containers:
+        - name: cinematica-frontend
+          image: karimshahid/cinematica-client:latest
+          # imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
