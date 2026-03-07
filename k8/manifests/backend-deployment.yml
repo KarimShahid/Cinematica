@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cinematica-backend-deployment
+  labels:
+    app: cinematica-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cinematica-backend
+  template:
+    metadata:
+      labels:
+        app: cinematica-backend
+    spec:
+      containers:
+        - name: cinematica-backend
+          image: karimshahid/cinematica-server:latest
+          ports:
+            - containerPort: 5001
+          env:
+            - name: PORT
+              value: "5001"
+            - name: MONGODB_URI
+              value: "mongodb://cinematica-mongodb-service:27017/cinematica"
+          envFrom:
+            - secretRef:
+                name: cinematica-secret
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
