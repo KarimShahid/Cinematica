@@ -19,7 +19,8 @@ services:
   server:
     build: ./server
     image: karimshahid/cinematica-server:latest
-    platform: linux/amd64
+    # Used buildx for multi-arch builds
+    # platform: linux/amd64
     container_name: cinematica-server
     env_file:
     - ./server/.env
@@ -36,7 +37,8 @@ services:
     build: 
       context: ./client
     image: karimshahid/cinematica-client:latest
-    platform: linux/amd64
+    # Used buildx for multi-arch builds
+    # platform: linux/amd64
     container_name: cinematica-client
     ports:
       - 80:80
